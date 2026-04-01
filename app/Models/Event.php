@@ -10,12 +10,17 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'title',
-        'description',
-        'date',
         'capacity',
+        'date',
+        'description',
+        'title',
+        'user_id',
     ];
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
 
     public function user()
     {
