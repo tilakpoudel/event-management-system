@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  event-management-system-db:
+    image: mysql:8.0
+    container_name: event-management-system-db
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "2081:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  event-management-system-phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: event-management-system-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: event-management-system-db
+    ports:
+      - "2082:80"
+    depends_on:
+      - event-management-system-db
+
+volumes:
+  mysql_data:
