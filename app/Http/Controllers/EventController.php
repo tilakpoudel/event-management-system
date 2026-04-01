@@ -2,64 +2,102 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreEventRequest;
+use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class EventController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Instantiate a new controller instance.
      */
-    public function index()
+    public function __construct()
     {
-        //
+        $this->middleware('auth')->except(['index', 'show']);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Display a listing of all events.
      */
-    public function create()
+    public function index(): View
     {
-        //
+        $events = Event::with('user')
+            ->orderBy('date', 'asc')
+            ->paginate(10);
+
+        return view('events.index', compact('events'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show the form for creating a new event.
      */
-    public function store(Request $request)
+    public function create(): View
     {
-        //
+        return view('events.create');
     }
 
     /**
-     * Display the specified resource.
+     * Store a newly created event in the database.
      */
-    public function show(Event $event)
+    public function store(StoreEventRequest $request): RedirectResponse
     {
-        //
+        $event = $request->user()->events()->create($request->validated());
+
+        return redirect()
+            ->route('events.show', $event)
+            ->with('success', 'Event created successfully.');
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Display the specified event with booking information.
      */
-    public function edit(Event $event)
+    public function show(Event $event): View
     {
-        //
+        $event->load('bookings.user');
+        $bookedCount = $event->bookings()->count();
+        $availableSeats = $event->capacity - $bookedCount;
+        $isUserBooked = auth()->check() && $event->bookings()
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        return view('events.show', compact('event', 'bookedCount', 'availableSeats', 'isUserBooked'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Show the form for editing the specified event.
      */
-    public function update(Request $request, Event $event)
+    public function edit(Event $event): View
     {
-        //
+        $this->authorize('update', $event);
+
+        return view('events.edit', compact('event'));
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Update the specified event in the database.
      */
-    public function destroy(Event $event)
+    public function update(UpdateEventRequest $request, Event $event): RedirectResponse
     {
-        //
+        $event->update($request->validated());
+
+        return redirect()
+            ->route('events.show', $event)
+            ->with('success', 'Event updated successfully.');
+    }
+
+    /**
+     * Remove the specified event from the database.
+     */
+    public function destroy(Event $event): RedirectResponse
+    {
+        $this->authorize('delete', $event);
+        
+        $event->delete();
+
+        return redirect()
+            ->route('events.index')
+            ->with('success', 'Event deleted successfully.');
     }
 }
