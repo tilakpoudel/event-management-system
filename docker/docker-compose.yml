@@ -1,27 +1,46 @@
 version: '3.8'
 
+# Event Management System - Docker Compose Configuration
+# Services: MySQL 8.0 + PHPMyAdmin
+# Usage: docker-compose up -d
+# MySQL: localhost:2081 | PHPMyAdmin: localhost:2082
+
 services:
+  # MySQL Database Service
   event-management-system-db:
     image: mysql:8.0
     container_name: event-management-system-db
     restart: always
-    env_file:
-      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-event_management}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
     ports:
       - "2081:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
+  # PHPMyAdmin - MySQL Web Interface
   event-management-system-phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: event-management-system-phpmyadmin
     restart: always
     environment:
       PMA_HOST: event-management-system-db
+      PMA_USER: ${DB_USERNAME:-laravel}
+      PMA_PASSWORD: ${DB_PASSWORD:-secret}
     ports:
       - "2082:80"
     depends_on:
-      - event-management-system-db
+      event-management-system-db:
+        condition: service_healthy
 
 volumes:
   mysql_data:
+    driver: local

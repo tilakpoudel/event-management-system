@@ -1,2 +1,44 @@
 .env
+.env.backup
+.env.*.backup
+.env.local
+
 /storage/*.log
+/storage/logs/
+/vendor/
+/node_modules/
+
+# Build files
+/public/build/
+/public/hot
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.folder
+
+# Testing
+.phpunit.result.cache
+coverage/
+.coverage
+
+# Laravel
+/bootstrap/cache/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+
+# Composer
+composer.lock
+
+# NPM
+package-lock.json
+yarn.lock
